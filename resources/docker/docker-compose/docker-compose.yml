@@ -16,7 +16,7 @@ services:
     expose:
     - "9093"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9093,OUTSIDE://192.168.56.103:9092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9093,OUTSIDE://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -24,11 +24,24 @@ services:
       KAFKA_CREATE_TOPICS: "flink:1:1"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /opt/recommend/generator.sh:/opt/generator.sh
+      - /home/zzl/project/flink-recommandSystem-demo/resources/docker/docker-compose/generator.sh:/opt/generator.sh
+
+  mysql:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_ROOT_HOST=%
+    volumes:
+      - /home/zzl/project/flink-recommandSystem-demo/resources/docker/docker-compose/contact.sql:/opt/contact.sql
 
   hbase:
     container_name: hbase
-    hostname: docker-linux
+    hostname: master
     image: xinze0803/hbase
     links:
       - zookeeper
@@ -45,19 +58,8 @@ services:
       - "16030:16030"
     command: ["/wait-for-it.sh", "zookeeper:2181", "-t", "10", "--", "/usr/bin/supervisord"]
     volumes:
-      - /opt/recommend/hbase_ini.sql:/opt/hbase_ini.sql
+      - /home/zzl/project/flink-recommandSystem-demo/resources/docker/docker-compose/hbase_ini.sql:/opt/hbase_ini.sql
 
-  mysql:
-    image: mysql
-    command: --default-authentication-plugin=mysql_native_password
-    restart: always
-    container_name: mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=123456
-      - MYSQL_ROOT_HOST=%
-    volumes:
-      - /opt/recommend/contact.sql:/opt/contact.sql
-      
   redis:
     image: redis
     container_name: redis
